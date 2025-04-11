@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 根布局，用于控制气泡的左右对齐 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="8dp"
+    android:paddingVertical="4dp">
+
+    <!-- 这个 LinearLayout 是实际的气泡，将应用背景和内边距 -->
+    <LinearLayout
+        android:id="@+id/bubbleContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+        <!-- 内边距，让文字和气泡边缘有距离 -->
+
+        <!-- 角色 TextView (可选，如果不需要可以去掉) -->
+        <TextView
+            android:id="@+id/textViewRole"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="@string/role"
+            android:textSize="12sp"
+            android:visibility="visible"  />
+        <!-- 如果想显示角色，改为 android:visibility="visible"
+             并考虑调整颜色或位置 -->
+
+        <!-- 消息内容 -->
+        <TextView
+            android:id="@+id/textViewContent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:text="@string/message_content_here"
+            android:textColor="@android:color/black" />
+        <!-- 明确设置文本颜色，确保在不同背景下可见 -->
+    </LinearLayout>
+
+</LinearLayout>

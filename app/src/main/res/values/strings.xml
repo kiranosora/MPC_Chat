@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">MPC_Chat</string>
+    <string name="role">Role</string>
+    <string name="message_content_here">Message content here...</string>
+    <string name="msg_hint">输入消息...</string>
+    <string name="send">发送</string>
+</resources>
