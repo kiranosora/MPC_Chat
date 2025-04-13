@@ -7,7 +7,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
-import com.kiranosora.space.mpc_chat.ChatMessage
+import com.kiranosora.space.mpc_chat.api_chat.ChatMessage
 
 @Entity(tableName = "chat_sessions")
 data class ChatSession(

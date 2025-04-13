@@ -1,6 +1,4 @@
-package com.kiranosora.space.mpc_chat;
-
-import java.util.List;
+package com.kiranosora.space.mpc_chat.api_chat;
 
 import retrofit2.Call;
 import retrofit2.http.Body;

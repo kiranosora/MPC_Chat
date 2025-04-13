@@ -1,4 +1,4 @@
-package com.kiranosora.space.mpc_chat;
+package com.kiranosora.space.mpc_chat.api_chat;
 
 import java.util.List;
 

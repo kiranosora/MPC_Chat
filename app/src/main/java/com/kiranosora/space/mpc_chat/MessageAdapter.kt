@@ -1,7 +1,6 @@
 package com.kiranosora.space.mpc_chat
 
 
-import android.annotation.SuppressLint // 用于忽略 notifyDataSetChanged 警告 (稍后优化)
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -10,8 +9,8 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.kiranosora.space.mpc_chat.api_chat.ChatMessage
 
 class MessageAdapter(private val messages: MutableList<ChatMessage>) :
     RecyclerView.Adapter<MessageAdapter.MessageViewHolder>() {
@@ -49,7 +48,7 @@ class MessageAdapter(private val messages: MutableList<ChatMessage>) :
             // (可选) 如果需要，可以设置文字颜色
             // holder.contentTextView.setTextColor(ContextCompat.getColor(holder.itemView.context, R.color.user_text_color))
 
-        } else { // assistant 或 system
+        } else { // assistant 或 system 或 tool
             // 助手或系统消息 (浅蓝色，靠左)
             holder.bubbleContainer.background = ContextCompat.getDrawable(holder.itemView.context, R.drawable.bg_bubble_assistant)
             // 设置气泡容器在根布局内的对齐方式
@@ -72,9 +71,9 @@ class MessageAdapter(private val messages: MutableList<ChatMessage>) :
     // 添加新消息
     fun updateMessages(messages: List<ChatMessage>) {
         this.messages.clear()
-        Log.d("updateMessages", "before messages: ${messages.size}")
+        //Log.d("updateMessages", "before messages: ${messages.size}")
         this.messages.addAll(messages)
-        Log.d("updateMessages", "after messages: ${messages.size}")
+        //Log.d("updateMessages", "after messages: ${messages.size}")
         notifyDataSetChanged()
     }
 

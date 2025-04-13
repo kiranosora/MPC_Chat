@@ -1,11 +1,9 @@
-package com.kiranosora.space.mpc_chat;
+package com.kiranosora.space.mpc_chat.api_chat;
 
 import com.google.gson.annotations.SerializedName;
 import com.kiranosora.space.mpc_chat.db.DbChatMessage;
 
 import java.util.List;
-
-import kotlin.jvm.Transient;
 
 public class ChatMessage {
     long id = 0;
@@ -14,6 +12,37 @@ public class ChatMessage {
     String content;
     boolean isStreaming;
     long timestamp ;
+
+    public String getRole() {
+        return role;
+    }
+
+    public String getContent(){
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public long getTimestamp(){
+        return timestamp;
+    }
+
+    public boolean isStreaming() {
+        return isStreaming;
+    }
+
+    public void setStreaming(boolean streaming) {
+        isStreaming = streaming;
+    }
+
+    public long getId() {
+        return id;
+    }
+    public long getSessionId() {
+        return sessionId;
+    }
 
     public ChatMessage(long sessionId, String role, String content) {
         this.id = 0;
@@ -75,6 +104,10 @@ class StreamingChatCompletionChunk {
         this.model = model;
         this.systemFingerprint = systemFingerprint;
     }
+
+    public List<StreamChoice> getChoices() {
+        return choices;
+    }
 }
 
 
@@ -99,3 +132,5 @@ class Delta{
         this.content = content;
     }
 }
+
+

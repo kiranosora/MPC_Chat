@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
+import com.kiranosora.space.mpc_chat.api_chat.ChatMessage
 import com.kiranosora.space.mpc_chat.db.AppDatabase
 import com.kiranosora.space.mpc_chat.db.ChatRepository
 import com.kiranosora.space.mpc_chat.db.toUiChatMessage
@@ -73,7 +74,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
             // Save to DB
             withContext(Dispatchers.IO) { // Ensure DB operations are off main thread
-                if(role == "user"){
+                if(role == "user" || role == "system" || role == "tool"){
                     repository.insertMessage(dbMessage)
                 }
                 // Try setting session title based on the first user message
@@ -89,20 +90,20 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     // Append streaming content (doesn't save intermediate chunks to DB)
     fun appendStreamingContent(contentChunk: String) {
-        Log.d("appendStreamingContent", "before append messages.size() ${_currentMessages.value.size}")
+        //Log.d("appendStreamingContent", "before append messages.size() ${_currentMessages.value.size}")
         val lastMessage = _currentMessages.value.lastOrNull()
-        if (lastMessage != null) {
-            Log.d("appendStreamingContent", "${lastMessage.content}, ${lastMessage.role}, ${lastMessage.isStreaming}")
-        }else{
-            Log.e("appendStreamingContent", "lastMessage is null")
-        }
+//        if (lastMessage != null) {
+//            Log.d("appendStreamingContent", "${lastMessage.content}, ${lastMessage.role}, ${lastMessage.isStreaming}")
+//        }else{
+//            Log.e("appendStreamingContent", "lastMessage is null")
+//        }
         if (lastMessage != null && lastMessage.role == "assistant" && lastMessage.isStreaming) {
             lastMessage.content += contentChunk
             val listWithoutLast = _currentMessages.value.dropLast(1)
             val updatedLastMessage = lastMessage.copy(true) // Use copy()
             val newList = listWithoutLast + updatedLastMessage
             _currentMessages.value = newList // Trigger StateFlow update
-            Log.d("appendStreamingContent", "after append messages.size() ${_currentMessages.value.size}")
+            //Log.d("appendStreamingContent", "after append messages.size() ${_currentMessages.value.size}")
 
         }
     }
