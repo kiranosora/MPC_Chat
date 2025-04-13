@@ -2,6 +2,7 @@ package com.kiranosora.space.mpc_chat
 
 
 import android.annotation.SuppressLint // 用于忽略 notifyDataSetChanged 警告 (稍后优化)
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 
 class MessageAdapter(private val messages: MutableList<ChatMessage>) :
@@ -41,6 +43,7 @@ class MessageAdapter(private val messages: MutableList<ChatMessage>) :
             val params = holder.bubbleContainer.layoutParams as LinearLayout.LayoutParams
             params.gravity = Gravity.END // 靠右对齐
             params.leftMargin = 200
+            params.rightMargin = 10
             holder.bubbleContainer.layoutParams = params // 应用修改后的参数
 
             // (可选) 如果需要，可以设置文字颜色
@@ -53,6 +56,7 @@ class MessageAdapter(private val messages: MutableList<ChatMessage>) :
             val params = holder.bubbleContainer.layoutParams as LinearLayout.LayoutParams
             params.gravity = Gravity.START // 靠左对齐
             holder.bubbleContainer.layoutParams = params // 应用修改后的参数
+            params.leftMargin = 10
             params.rightMargin = 200
 
             // (可选) 如果需要，可以设置文字颜色
@@ -63,35 +67,18 @@ class MessageAdapter(private val messages: MutableList<ChatMessage>) :
 
     override fun getItemCount() = messages.size
 
+
+
     // 添加新消息
-    fun addMessage(message: ChatMessage) {
-        messages.add(message)
-        notifyItemInserted(messages.size - 1)
+    fun updateMessages(messages: List<ChatMessage>) {
+        this.messages.clear()
+        Log.d("updateMessages", "before messages: ${messages.size}")
+        this.messages.addAll(messages)
+        Log.d("updateMessages", "after messages: ${messages.size}")
+        notifyDataSetChanged()
     }
 
-    // 追加内容到最后一条消息 (假设最后一条是助手的流式消息)
-    fun appendToLastMessage(contentChunk: String) {
-        if (messages.isNotEmpty()) {
-            val lastMessage = messages.last()
-            // 确保是在追加给助手消息
-            if (lastMessage.role == "assistant") {
-                lastMessage.content += contentChunk
-                // 只更新最后一个 item 的内容，更高效
-                notifyItemChanged(messages.size - 1, PAYLOAD_CONTENT_UPDATE) // 使用 Payload 优化
-            }
-        }
-    }
 
-    // 标记最后一条消息流式传输结束
-    fun markStreamingComplete() {
-        if (messages.isNotEmpty()) {
-            val lastMessage = messages.last()
-            if (lastMessage.role == "assistant") {
-                lastMessage.isStreaming = false
-                notifyItemChanged(messages.size - 1, PAYLOAD_STREAMING_DONE) // 使用 Payload 优化
-            }
-        }
-    }
 
     // 用于 notifyItemChanged 的 Payload，避免整个 item 重绘
     companion object {
