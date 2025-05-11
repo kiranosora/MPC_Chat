@@ -47,11 +47,13 @@ class MpcRequestHelper {
                     }
                 }
             }
-            if(arg_types.isEmpty()){
-                return "empty arg_types for tool ${functionCallArguments.name}"
-            }
+
             val toolCallResponse:String
-            if(arg_types[0] == "string"){
+            if(arg_types.isEmpty()){
+                Log.d("tool_call", "start to call arguments: void with url = ${currentMpcConfig.baseUrl}/${functionCallArguments.name}")
+                toolCallResponse = mpcCallService.callToolVoid("${currentMpcConfig.baseUrl}${functionCallArguments.name}",
+                ).execute().body().toString()            }
+            else if(arg_types[0] == "string"){
                 type = object : TypeToken<Map<String, String>>() {}.type
                 val arguments: Map<String, String> = gson.fromJson(functionCallArguments.arguments, type)
                 Log.d("tool_call", "start to call arguments: $arguments with url = ${currentMpcConfig.baseUrl}/${functionCallArguments.name}")

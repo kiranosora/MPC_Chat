@@ -85,16 +85,25 @@ class MainActivity : AppCompatActivity() {
     // --- API Configurations ---
     private val apiConfigs = listOf(
         ApiConfig(
-            name = "qwq-32b@4bit", // 显示在下拉菜单的名字
+            name = "qwen3moe", // 显示在下拉菜单的名字
             baseUrl = "https://kiranosora.space:12345/v1/", // 你的原始 Base URL
-            modelName = "lmstudio-community/qwq-32b", // 替换成你的模型名!
-            apiKey = "lm_studio" // 你的原始 Key
+            modelName = "qwen3:30b-a3b-fp16", // 替换成你的模型名!
+            apiKey = "ollama", // 你的原始 Key
+            isOllama = false
         ),
         ApiConfig(
-            name = "qwq-32b@8bit", // 显示在下拉菜单的名字
+            name = "qwen3moe-full", // 显示在下拉菜单的名字
             baseUrl = "https://kiranosora.space:12345/v1/", // 你的原始 Base URL
-            modelName = "triangle104/qwq-32b", // 替换成你的模型名!
-            apiKey = "lm_studio" // 你的原始 Key
+            modelName = "Qwen3-235B-A22B-IQ2_S-ollama:latest", // 替换成你的模型名!
+            apiKey = "ollama", // 你的原始 Key
+            isOllama = false
+        ),
+        ApiConfig(
+            name = "qwen3:32b-q8_0", // 显示在下拉菜单的名字
+            baseUrl = "https://kiranosora.space:12345/v1/", // 你的原始 Base URL
+            modelName = "qwen3:32b-q8_0", // 替换成你的模型名!
+            apiKey = "ollama", // 你的原始 Key,
+            isOllama = false
         ),
         ApiConfig(
             name = "gemini 2.5 pro",
@@ -102,12 +111,6 @@ class MainActivity : AppCompatActivity() {
             modelName = "models/gemini-2.5-pro-exp-03-25",             // 示例: OpenAI 模型
             apiKey = "AIzaSyCr4L4sPz5h7tMWqOttqNKLKaHWaxfmMUw"           // 示例: 替换成你的 OpenAI Key
         ),
-        ApiConfig(
-            name = "deepseek-r1-distill-qwen-14b", // 显示在下拉菜单的名字
-            baseUrl = "https://kiranosora.space:12345/v1/", // 你的原始 Base URL
-            modelName = "deepseek-r1-distill-qwen-14b", // 替换成你的模型名!
-            apiKey = "lm_studio" // 你的原始 Key
-        )
     )
 
     // --- MPC Configurations ---
@@ -393,7 +396,10 @@ class MainActivity : AppCompatActivity() {
         val requestBodyJson = gson.toJson(requestPayload)
         Log.d("sendMessageToApi", "requestBodyJson: $requestBodyJson")
         val requestBody = requestBodyJson.toRequestBody("application/json".toMediaType())
-        val chatUrl = currentApiConfig.baseUrl.removeSuffix("/") + "/chat/completions"
+        var chatUrl = currentApiConfig.baseUrl.removeSuffix("/") + "/chat/completions"
+        if(currentApiConfig.isOllama){
+            chatUrl = currentApiConfig.baseUrl.removeSuffix("/") + "/chat"
+        }
         val apiKeyHeader = "Bearer ${currentApiConfig.apiKey}"
         val request = Request.Builder()
             .url(chatUrl)
@@ -415,6 +421,9 @@ class MainActivity : AppCompatActivity() {
                     // Mark completion in ViewModel
                     lifecycleScope.launch {
                         withContext(Dispatchers.IO) {
+                            if(mpcChunks.isEmpty()){
+                                return@withContext
+                            }
                             val function = mpcChunks[0].choices?.get(0)?.delta?.toolCalls?.get(0)?.function
                             if(function != null){
                                 val tool_result = createMpcToolCallRequest(currentMpcConfig, function)
@@ -439,7 +448,7 @@ class MainActivity : AppCompatActivity() {
 
                     }
                     val contentDelta = getContentDelta(data)
-                    //Log.d("MainActivity", "contentDelta: $contentDelta")
+                    Log.d("MainActivity", "contentDelta: $contentDelta")
                     if (contentDelta != null) {
                         // Append content via ViewModel
                         lifecycleScope.launch { chatViewModel.appendStreamingContent(contentDelta) }

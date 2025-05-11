@@ -15,5 +15,8 @@ public interface MpcCallService {
 
     @POST
     fun callToolString(@Url url: String, @Body arguments: Map<String, String>): Call<String>
+
+    @POST
+    fun callToolVoid(@Url url: String): Call<String>
 }
 
