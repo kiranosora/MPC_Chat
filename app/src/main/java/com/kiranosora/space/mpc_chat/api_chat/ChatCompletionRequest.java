@@ -1,6 +1,6 @@
 package com.kiranosora.space.mpc_chat.api_chat;
 
-import com.kiranosora.space.mpc_chat.mpc.FunctionTool;
+import com.kiranosora.space.mpc_chat.mcp.FunctionTool;
 
 import java.util.List;
 

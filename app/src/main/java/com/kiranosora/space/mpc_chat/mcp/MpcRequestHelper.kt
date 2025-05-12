@@ -1,32 +1,31 @@
-package com.kiranosora.space.mpc_chat.mpc
+package com.kiranosora.space.mpc_chat.mcp
 
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.kiranosora.space.mpc_chat.MpcConfig
+import com.kiranosora.space.mpc_chat.McpConfig
 import okhttp3.Response
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.Objects
 
 class MpcRequestHelper {
     companion object {
         val retorfit: Retrofit.Builder = Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
         val gson = Gson()
         var functionTools : List<FunctionTool>? = null
-        fun createGetMpcInfoRequest(currentMpcConfig: MpcConfig): List<FunctionTool>? {
-            val mpcCallService =retorfit.baseUrl(currentMpcConfig.baseUrl).build().create(MpcCallService::class.java)
+        fun createGetMpcInfoRequest(currentMcpConfig: McpConfig): List<FunctionTool>? {
+            val mpcCallService =retorfit.baseUrl(currentMcpConfig.baseUrl).build().create(MpcCallService::class.java)
             val mpcInfoResponse =  mpcCallService.getMpcInfo().execute().body()
             functionTools = mpcInfoResponse?.toFunctionTool()!!
             val functionToolsJson = gson.toJson(functionTools)
-            Log.d("MPC_${currentMpcConfig.name}", "Function Tools: $functionToolsJson")
+            Log.d("MPC_${currentMcpConfig.name}", "Function Tools: $functionToolsJson")
             return functionTools
         }
 
-        fun createMpcToolCallRequest(currentMpcConfig: MpcConfig, functionCallArguments: FunctionCallArguments): String? {
-            val mpcCallService =retorfit.baseUrl(currentMpcConfig.baseUrl).build().create(MpcCallService::class.java)
+        fun createMpcToolCallRequest(currentMcpConfig: McpConfig, functionCallArguments: FunctionCallArguments): String? {
+            val mpcCallService =retorfit.baseUrl(currentMcpConfig.baseUrl).build().create(MpcCallService::class.java)
             Log.d("tool_call", "arguments: ${functionCallArguments.arguments}")
             var type = object : TypeToken<Map<String, Object>>() {}.type
             if(functionTools == null){
@@ -50,21 +49,21 @@ class MpcRequestHelper {
 
             val toolCallResponse:String
             if(arg_types.isEmpty()){
-                Log.d("tool_call", "start to call arguments: void with url = ${currentMpcConfig.baseUrl}/${functionCallArguments.name}")
-                toolCallResponse = mpcCallService.callToolVoid("${currentMpcConfig.baseUrl}${functionCallArguments.name}",
+                Log.d("tool_call", "start to call arguments: void with url = ${currentMcpConfig.baseUrl}/${functionCallArguments.name}")
+                toolCallResponse = mpcCallService.callToolVoid("${currentMcpConfig.baseUrl}${functionCallArguments.name}",
                 ).execute().body().toString()            }
             else if(arg_types[0] == "string"){
                 type = object : TypeToken<Map<String, String>>() {}.type
                 val arguments: Map<String, String> = gson.fromJson(functionCallArguments.arguments, type)
-                Log.d("tool_call", "start to call arguments: $arguments with url = ${currentMpcConfig.baseUrl}/${functionCallArguments.name}")
-                toolCallResponse = mpcCallService.callToolString("${currentMpcConfig.baseUrl}/${functionCallArguments.name}",
+                Log.d("tool_call", "start to call arguments: $arguments with url = ${currentMcpConfig.baseUrl}/${functionCallArguments.name}")
+                toolCallResponse = mpcCallService.callToolString("${currentMcpConfig.baseUrl}/${functionCallArguments.name}",
                     arguments
                 ).execute().body().toString()
             }
             else if(arg_types[0] == "integer"){
                 type = object : TypeToken<Map<String, Int>>() {}.type
                 val arguments: Map<String, Int> = gson.fromJson(functionCallArguments.arguments, type)
-                toolCallResponse = mpcCallService.callToolInt("${currentMpcConfig.baseUrl}/${functionCallArguments.name}",
+                toolCallResponse = mpcCallService.callToolInt("${currentMcpConfig.baseUrl}/${functionCallArguments.name}",
                     arguments
                 ).execute().body().toString()
             }
@@ -72,12 +71,12 @@ class MpcRequestHelper {
                 return "${arg_types[0]} not implemented yet"
             }
 
-            Log.d("MPC_${currentMpcConfig.name}", "Function Tools: $toolCallResponse")
+            Log.d("MPC_${currentMcpConfig.name}", "Function Tools: $toolCallResponse")
             return toolCallResponse
         }
 
-        fun createMpcSystemPrompt(currentMpcConfig: MpcConfig) : List<FunctionTool>?{
-            val functionTools = createGetMpcInfoRequest(currentMpcConfig)
+        fun createMpcSystemPrompt(currentMcpConfig: McpConfig) : List<FunctionTool>?{
+            val functionTools = createGetMpcInfoRequest(currentMcpConfig)
             return functionTools
         }
 
@@ -97,17 +96,21 @@ class MpcRequestHelper {
                         tool_index = toolcalls.size -1
                         Log.e("function_tool", "tool_index:$tool_index, toolcalls.size: $toolcalls.size")
                     }
-                    toolcalls[tool_index].function?.name = toolcalls[tool_index].function?.name + function.name
-                    toolcalls[tool_index].function?.arguments = toolcalls[tool_index].function?.arguments + function.arguments
+                    if(toolcalls[tool_index].function?.name?.contains("/") == false) {
+                        toolcalls[tool_index].function?.name =
+                            toolcalls[tool_index].function?.name + function.name
+                        toolcalls[tool_index].function?.arguments =
+                            toolcalls[tool_index].function?.arguments + function.arguments
+                    }
                 }
             }
             return chunks
         }
     }
-    class BaseGetMpcInfoListener(val currentMpcConfig: MpcConfig): EventSourceListener() {
+    class BaseGetMpcInfoListener(val currentMcpConfig: McpConfig): EventSourceListener() {
         override fun onOpen(eventSource: EventSource, response: Response) {
             super.onOpen(eventSource, response)
-            Log.d("MPC_${currentMpcConfig.name}", "Connection Opened")
+            Log.d("MPC_${currentMcpConfig.name}", "Connection Opened")
         }
 
         override fun onEvent(
@@ -121,7 +124,7 @@ class MpcRequestHelper {
             val mpcInfoResponse = gson.fromJson(data, MpcInfoResponse::class.java)
             val functionTools = mpcInfoResponse.toFunctionTool()
             val functionToolsJson = gson.toJson(functionTools)
-            Log.d("MPC_${currentMpcConfig.name}", "Function Tools: $functionToolsJson")
+            Log.d("MPC_${currentMcpConfig.name}", "Function Tools: $functionToolsJson")
         }
 
         override fun onFailure(
@@ -130,12 +133,12 @@ class MpcRequestHelper {
             response: Response?
         ) {
             super.onFailure(eventSource, t, response)
-            Log.e("MPC_${currentMpcConfig.name}", "Connection Failed with error: ${t?.message} response:${response?.message}")
+            Log.e("MPC_${currentMcpConfig.name}", "Connection Failed with error: ${t?.message} response:${response?.message}")
         }
 
         override fun onClosed(eventSource: EventSource) {
             super.onClosed(eventSource)
-            Log.d("MPC_${currentMpcConfig.name}", "Connection Closed")
+            Log.d("MPC_${currentMcpConfig.name}", "Connection Closed")
         }
     }
 }

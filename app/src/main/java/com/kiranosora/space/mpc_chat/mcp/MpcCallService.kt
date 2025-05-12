@@ -1,4 +1,5 @@
-package com.kiranosora.space.mpc_chat.mpc
+package com.kiranosora.space.mpc_chat.mcp
+import com.google.gson.annotations.SerializedName
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -17,6 +18,9 @@ public interface MpcCallService {
     fun callToolString(@Url url: String, @Body arguments: Map<String, String>): Call<String>
 
     @POST
-    fun callToolVoid(@Url url: String): Call<String>
+    fun callToolVoid(@Url url: String): Call<TimeResponse>
 }
 
+data class TimeResponse(
+    @SerializedName("local_time") val localTime: String
+)

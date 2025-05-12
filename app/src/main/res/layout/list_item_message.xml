@@ -33,7 +33,7 @@
             android:id="@+id/textViewContent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
+            android:textSize="12sp"
             android:text="@string/message_content_here"
             android:textColor="@android:color/black" />
         <!-- 明确设置文本颜色，确保在不同背景下可见 -->

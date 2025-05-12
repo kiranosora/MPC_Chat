@@ -1,4 +1,4 @@
-package com.kiranosora.space.mpc_chat.mpc
+package com.kiranosora.space.mpc_chat.mcp
 
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor

@@ -11,7 +11,7 @@ object ApiClient {
     // OkHttpClient 实例 (需要先定义)
     val okHttpClient: OkHttpClient by lazy {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.HEADERS
+            level = HttpLoggingInterceptor.Level.NONE
         }
         OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)

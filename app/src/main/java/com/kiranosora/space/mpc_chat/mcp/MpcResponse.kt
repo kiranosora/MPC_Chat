@@ -1,8 +1,7 @@
-package com.kiranosora.space.mpc_chat.mpc
+package com.kiranosora.space.mpc_chat.mcp
 
 import android.util.Log
 import com.google.gson.annotations.SerializedName
-import com.kiranosora.space.mpc_chat.mpc.MpcRequestHelper.Companion.gson
 
 /**
  * Root object for the OpenAPI specification.

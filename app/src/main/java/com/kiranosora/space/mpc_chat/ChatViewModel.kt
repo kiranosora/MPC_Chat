@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.kiranosora.space.mpc_chat.api_chat.ChatMessage
 import com.kiranosora.space.mpc_chat.db.AppDatabase
 import com.kiranosora.space.mpc_chat.db.ChatRepository
+import com.kiranosora.space.mpc_chat.db.DbChatMessage
 import com.kiranosora.space.mpc_chat.db.toUiChatMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,7 +49,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _currentSessionId.value = sessionId
             val messages = repository.getMessagesForSession(sessionId)
-            _currentMessages.value = messages.map { it.toUiChatMessage() } // Map to UI model
+            var newMessages :MutableList<DbChatMessage> = mutableListOf()
+            for(msg in messages){
+                if(msg.content.isNotEmpty()){
+                    newMessages.add(msg)
+                }
+            }
+            _currentMessages.value = newMessages.map { it.toUiChatMessage() } // Map to UI model
         }
     }
 
@@ -62,16 +69,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     // Add a message (user or assistant) to the current session and save it
     fun addMessage(role: String, content: String, sessionId: Long) {
+        val isLikelyFirstUserMsgInCurrentState = (role == "user" && _currentMessages.value.none { it.role == "user" })
+        val uiMessage = ChatMessage(sessionId,role, content)
+        // 2. 立即更新 StateFlow (乐观更新 UI 状态)
+        //    确保这是在 viewModelScope.launch 外部，以便立即生效
+        _currentMessages.value = _currentMessages.value + uiMessage
+        Log.d("addMessage", "add $content to $role")
         viewModelScope.launch {
-            val isLikelyFirstUserMsgInCurrentState = (role == "user" && _currentMessages.value.none { it.role == "user" })
-            val uiMessage = ChatMessage(sessionId,role, content)
-            // 2. 立即更新 StateFlow (乐观更新 UI 状态)
-            //    确保这是在 viewModelScope.launch 外部，以便立即生效
-            Log.d("addMessage", "cuurentMessage before: ${_currentMessages.value}")
-            _currentMessages.value = _currentMessages.value + uiMessage
-            Log.d("addMessage", "cuurentMessage after: ${_currentMessages.value}")
             val dbMessage = uiMessage.toDbChatMessage()
-
             // Save to DB
             withContext(Dispatchers.IO) { // Ensure DB operations are off main thread
                 if(role == "user" || role == "system" || role == "tool"){
@@ -82,7 +87,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     repository.setSessionTitleIfNeeded(sessionId, content)
                 }
             }
-
             Log.d("addMessage", "currentMessages: ${_currentMessages.value.size}, ${_currentMessages.value.lastOrNull()?.content}")
             // Or reload from DB for consistency: loadSession(sessionId)
         }
@@ -97,7 +101,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 //        }else{
 //            Log.e("appendStreamingContent", "lastMessage is null")
 //        }
-        if (lastMessage != null && lastMessage.role == "assistant" && lastMessage.isStreaming) {
+        if (lastMessage != null && lastMessage.role == "assistant" /*&& lastMessage.isStreaming*/) {
             lastMessage.content += contentChunk
             val listWithoutLast = _currentMessages.value.dropLast(1)
             val updatedLastMessage = lastMessage.copy(true) // Use copy()
@@ -114,12 +118,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val currentList = _currentMessages.value
             val lastMessage = currentList.lastOrNull()
-            if (lastMessage != null && lastMessage.role == "assistant" && lastMessage.isStreaming) {
+            if (lastMessage != null && lastMessage.role == "assistant" /*&& lastMessage.isStreaming*/) {
                 lastMessage.isStreaming = false // Mark complete
                 val dbMessage = lastMessage.toDbChatMessage()
                 // Save the final assistant message to DB
                 withContext(Dispatchers.IO) {
-                    repository.insertMessage(dbMessage)
+                    if(dbMessage.content.isNotEmpty()){
+                        repository.insertMessage(dbMessage)
+                    }
                 }
                 // Update the StateFlow reference to ensure recomposition/update
                 _currentMessages.value = currentList.toList() // Create a new list instance

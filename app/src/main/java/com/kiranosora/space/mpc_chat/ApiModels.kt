@@ -8,7 +8,7 @@ data class ApiConfig(
     val isOllama: Boolean=false
 )
 
-data class MpcConfig(
+data class McpConfig(
     val name: String,       // 在下拉菜单中显示的名称
     val baseUrl: String,
     val apiKey: String

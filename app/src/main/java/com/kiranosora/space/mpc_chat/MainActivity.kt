@@ -38,11 +38,11 @@ import com.kiranosora.space.mpc_chat.api_chat.ApiChatHelper.Companion.getFinishR
 import com.kiranosora.space.mpc_chat.api_chat.ApiClient
 import com.kiranosora.space.mpc_chat.api_chat.ChatCompletionRequest
 import com.kiranosora.space.mpc_chat.api_chat.ChatMessage
-import com.kiranosora.space.mpc_chat.mpc.MpcRequestHelper
-import com.kiranosora.space.mpc_chat.mpc.MpcRequestHelper.Companion.addFunctionCall
-import com.kiranosora.space.mpc_chat.mpc.MpcRequestHelper.Companion.createGetMpcInfoRequest
-import com.kiranosora.space.mpc_chat.mpc.MpcRequestHelper.Companion.createMpcToolCallRequest
-import com.kiranosora.space.mpc_chat.mpc.ToolChatCompletionChunk
+import com.kiranosora.space.mpc_chat.mcp.MpcRequestHelper
+import com.kiranosora.space.mpc_chat.mcp.MpcRequestHelper.Companion.addFunctionCall
+import com.kiranosora.space.mpc_chat.mcp.MpcRequestHelper.Companion.createGetMpcInfoRequest
+import com.kiranosora.space.mpc_chat.mcp.MpcRequestHelper.Companion.createMpcToolCallRequest
+import com.kiranosora.space.mpc_chat.mcp.ToolChatCompletionChunk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -114,13 +114,13 @@ class MainActivity : AppCompatActivity() {
     )
 
     // --- MPC Configurations ---
-    private val mpcConfigs = listOf(
-        MpcConfig(
-            name = "local MPC", // 显示在下拉菜单的名字
+    private val mcpConfigs = listOf(
+        McpConfig(
+            name = "local MCP", // 显示在下拉菜单的名字
             baseUrl = "https://kiranosora.space:11112/", // 你的原始 Base URL
-            apiKey = "my_mpc" // 你的原始 Key
+            apiKey = "my_mcp" // 你的原始 Key
         ),
-        MpcConfig(
+        McpConfig(
             name = "disable", // 显示在下拉菜单的名字
             baseUrl = "dummy", // 你的原始 Base URL
             apiKey = "dummy" // 你的原始 Key
@@ -135,7 +135,7 @@ class MainActivity : AppCompatActivity() {
     }
     // 当前选中的 API 配置
     private lateinit var currentApiConfig: ApiConfig
-    private lateinit var currentMpcConfig: MpcConfig
+    private lateinit var currentMcpConfig: McpConfig
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -270,18 +270,18 @@ class MainActivity : AppCompatActivity() {
         var lastSelectedIndex = prefs.getInt(KEY_LAST_SELECTED_INDEX_MPC, 0) // 默认选第0个
 
         // 验证索引是否有效 (防止列表变动导致索引越界)
-        if (lastSelectedIndex !in mpcConfigs.indices) {
+        if (lastSelectedIndex !in mcpConfigs.indices) {
             lastSelectedIndex = 0 // 如果无效，重置为0
         }
         // 提取配置名称用于显示在 Spinner 中
-        val configNames = mpcConfigs.map { it.name }
+        val configNames = mcpConfigs.map { it.name }
         // --- 设置 Spinner 初始选项 ---
-        if (mpcConfigs.isNotEmpty()) {
+        if (mcpConfigs.isNotEmpty()) {
             // 设置 Spinner 显示的初始项，false 表示不要触发 onItemSelected 监听器
             mpcConfigSpinner.setSelection(lastSelectedIndex, false)
             // 初始化 currentMpcConfig 为加载的配置
-            currentMpcConfig = mpcConfigs[lastSelectedIndex]
-            Log.d("MPC_CONFIG", "Restored MPC Config: ${currentMpcConfig.name}")
+            currentMcpConfig = mcpConfigs[lastSelectedIndex]
+            Log.d("MPC_CONFIG", "Restored MPC Config: ${currentMcpConfig.name}")
         } else {
             // 处理没有配置的情况
             sendButton.isEnabled = false
@@ -299,8 +299,8 @@ class MainActivity : AppCompatActivity() {
         mpcConfigSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 // 更新当前选中的配置
-                currentMpcConfig = mpcConfigs[position]
-                Log.d("MPC_CONFIG", "Selected MPC Config: ${currentMpcConfig.name}")
+                currentMcpConfig = mcpConfigs[position]
+                Log.d("MPC_CONFIG", "Selected MPC Config: ${currentMcpConfig.name}")
 
                 // --- 保存当前选择的索引 ---
                 // 使用 edit() 获取 Editor 对象，放入数据，然后 apply() 保存
@@ -308,7 +308,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d("MPC_CONFIG", "Saved selected index: $position")                // (可选) 清空当前聊天记录，因为模型或端点可能已改变
                 // messageList.clear()
                 // messageAdapter.notifyDataSetChanged()
-                Toast.makeText(this@MainActivity, "切换到: ${currentMpcConfig.name}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "切换到: ${currentMcpConfig.name}", Toast.LENGTH_SHORT).show()
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -317,11 +317,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         // (可选) 如果你使用 SharedPreferences 加载了上次的选择，在这里设置 Spinner 的初始位置
-        if (lastSelectedIndex in mpcConfigs.indices) {
+        if (lastSelectedIndex in mcpConfigs.indices) {
             mpcConfigSpinner.setSelection(lastSelectedIndex)
-            currentMpcConfig = mpcConfigs[lastSelectedIndex]
-        } else if (mpcConfigs.isNotEmpty()) {
-            currentMpcConfig = mpcConfigs[0] // 默认选第一个
+            currentMcpConfig = mcpConfigs[lastSelectedIndex]
+        } else if (mcpConfigs.isNotEmpty()) {
+            currentMcpConfig = mcpConfigs[0] // 默认选第一个
         }
     }
 
@@ -353,7 +353,7 @@ class MainActivity : AppCompatActivity() {
                     if (messages.isNotEmpty()) {
                         recyclerView.post { // Use post to ensure layout is complete
                             //Log.d("observeViewModel", "scrollToPosition: ${messages.size - 1}")
-                            recyclerView.scrollToPosition(messages.size - 1)
+                            //recyclerView.scrollToPosition(messages.size - 1)
                         }
                     }
                 }
@@ -380,7 +380,7 @@ class MainActivity : AppCompatActivity() {
             showError("Please select an API configuration.")
             return
         }
-        val mpcPrompt = MpcRequestHelper.createMpcSystemPrompt(currentMpcConfig)
+        val mpcPrompt = MpcRequestHelper.createMpcSystemPrompt(currentMcpConfig)
         // 添加助手的初始空消息 (或带 "typing..." 标记)
         chatViewModel.addMessage("assistant", "", sessionId)
 
@@ -417,6 +417,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
                 // ... (parse data - same as before) ...
+                //Log.d("SSE_${currentApiConfig.name}", "Event Received: $data")
                 if (data == "[DONE]") {
                     // Mark completion in ViewModel
                     lifecycleScope.launch {
@@ -425,10 +426,13 @@ class MainActivity : AppCompatActivity() {
                                 return@withContext
                             }
                             val function = mpcChunks[0].choices?.get(0)?.delta?.toolCalls?.get(0)?.function
+                            //chatViewModel.addMessage("assistant", function.toString(), sessionId)
+                            chatViewModel.appendStreamingContent(function.toString())
+                            chatViewModel.markStreamingComplete()
                             if(function != null){
-                                val tool_result = createMpcToolCallRequest(currentMpcConfig, function)
+                                val tool_result = createMpcToolCallRequest(currentMcpConfig, function)
                                 if(tool_result != null){
-                                    chatViewModel.addMessage("tool", tool_result, sessionId)
+                                    toolRecall(sessionId, tool_result)
                                 }
                             }
                         }
@@ -448,7 +452,7 @@ class MainActivity : AppCompatActivity() {
 
                     }
                     val contentDelta = getContentDelta(data)
-                    Log.d("MainActivity", "contentDelta: $contentDelta")
+                    //Log.d("MainActivity", "contentDelta: $contentDelta")
                     if (contentDelta != null) {
                         // Append content via ViewModel
                         lifecycleScope.launch { chatViewModel.appendStreamingContent(contentDelta) }
@@ -474,7 +478,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onClosed(eventSource: EventSource) {
                 // Ensure completion is marked if closed unexpectedly
-                lifecycleScope.launch { chatViewModel.markStreamingComplete() }
+                //lifecycleScope.launch { chatViewModel.markStreamingComplete() }
                 runOnUiThread { enableControls() }
             }
 
@@ -491,10 +495,10 @@ class MainActivity : AppCompatActivity() {
         // Disable controls and start SSE
         disableControls()
         currentEventSource = ApiClient.eventSourceFactory.newEventSource(request, listener)
-        Log.d("sendMessageToApi", "currentMpcConfig: ${currentMpcConfig.name}")
+        Log.d("sendMessageToApi", "currentMpcConfig: ${currentMcpConfig.name}")
         lifecycleScope.launch {
             withContext(Dispatchers.IO){
-                createGetMpcInfoRequest(currentMpcConfig)
+                createGetMpcInfoRequest(currentMcpConfig)
             }
         }
 
@@ -522,6 +526,97 @@ class MainActivity : AppCompatActivity() {
     private fun showError(message: String) {
         runOnUiThread {
             Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun toolRecall(sessionId: Long, toolResult: String){
+        chatViewModel.addMessage("tool", toolResult, sessionId)
+
+        // --- Prepare Request ---
+        var mpcChunks :List<ToolChatCompletionChunk>  = listOf()
+        val requestPayload = ChatCompletionRequest(
+            currentApiConfig.modelName,
+            chatViewModel.currentMessages.value, // Map to API model if needed
+            true
+        )
+        // ... (rest of request building using currentApiConfig - same as before)
+        val requestBodyJson = gson.toJson(requestPayload)
+        Log.d("sendMessageToApi", "requestBodyJson: $requestBodyJson")
+        val requestBody = requestBodyJson.toRequestBody("application/json".toMediaType())
+        var chatUrl = currentApiConfig.baseUrl.removeSuffix("/") + "/chat/completions"
+        if(currentApiConfig.isOllama){
+            chatUrl = currentApiConfig.baseUrl.removeSuffix("/") + "/chat"
+        }
+        val apiKeyHeader = "Bearer ${currentApiConfig.apiKey}"
+        val request = Request.Builder()
+            .url(chatUrl)
+            .header("Authorization", apiKeyHeader)
+            .header("Accept", "text/event-stream")
+            .post(requestBody)
+            .build()
+        chatViewModel.addMessage("assistant","", sessionId)
+        val listener = object : EventSourceListener() {
+            override fun onEvent(
+                eventSource: EventSource,
+                id: String?,
+                type: String?,
+                data: String
+            ) {
+                super.onEvent(eventSource, id, type, data)
+                //Log.d("SSE_${currentApiConfig.name}", "Event Received: $data")
+                if (data == "[DONE]") {
+                    // Mark completion in ViewModel
+                    lifecycleScope.launch {
+                        chatViewModel.markStreamingComplete()
+                    }
+                    runOnUiThread {
+                        // messageAdapter.markStreamingComplete() // Handled by observing ViewModel state now
+                        enableControls()
+                    }
+                    return
+                }
+                try {
+                    if("tool_calls" in data){
+                        Log.d("gson","parseJson data: $data")
+                        mpcChunks = addFunctionCall(mpcChunks, gson.fromJson(data, ToolChatCompletionChunk::class.java))
+                        Log.d("tool_calls", "mpcChunks: ${gson.toJson(mpcChunks)}")
+                    }
+                    val contentDelta = getContentDelta(data)
+                    //Log.d("MainActivity", "contentDelta: $contentDelta")
+                    if (contentDelta != null) {
+                        // Append content via ViewModel
+                        lifecycleScope.launch { chatViewModel.appendStreamingContent(contentDelta) }
+                        // UI update happens via observing chatViewModel.currentMessages
+                    }
+                    val finishReason = getFinishReason(data)
+                    if (finishReason != null) {
+                        //lifecycleScope.launch { chatViewModel.markStreamingComplete() }
+                        runOnUiThread { enableControls() }
+                        eventSource.cancel()
+                    }
+                } catch (e: Exception) {
+                    // ... (error handling - mark complete in VM, enable controls) ...
+                    lifecycleScope.launch { chatViewModel.markStreamingComplete() } // Still mark complete on error
+                    runOnUiThread {
+                        e.printStackTrace()
+                        showError("Error parsing SSE: ${e.message}")
+                        enableControls()
+                    }
+                    eventSource.cancel()
+                }
+            }
+
+            override fun onOpen(eventSource: EventSource, response: Response) {
+                Log.d("SSE_${currentApiConfig.name}", "Connection Opened")
+
+            }
+        }
+        currentEventSource = ApiClient.eventSourceFactory.newEventSource(request, listener)
+        Log.d("sendMessageToApi", "currentMpcConfig: ${currentMcpConfig.name}")
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO){
+                createGetMpcInfoRequest(currentMcpConfig)
+            }
         }
     }
 }
