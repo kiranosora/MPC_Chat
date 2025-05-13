@@ -116,14 +116,19 @@ class MainActivity : AppCompatActivity() {
     // --- MPC Configurations ---
     private val mcpConfigs = listOf(
         McpConfig(
-            name = "local MCP", // 显示在下拉菜单的名字
-            baseUrl = "https://kiranosora.space:11112/", // 你的原始 Base URL
-            apiKey = "my_mcp" // 你的原始 Key
+            name = McpConfig.REMOTE_MCP, // 显示在下拉菜单的名字
+            baseUrl = McpConfig.REMOTE_BASE_URL, // 你的原始 Base URL
+            apiKey = McpConfig.DUMMY // 你的原始 Key
         ),
         McpConfig(
-            name = "disable", // 显示在下拉菜单的名字
-            baseUrl = "dummy", // 你的原始 Base URL
-            apiKey = "dummy" // 你的原始 Key
+            name = McpConfig.LOCAL_MCP, // 显示在下拉菜单的名字
+            baseUrl = McpConfig.DUMMY, // 你的原始 Base URL
+            apiKey = McpConfig.DUMMY // 你的原始 Key
+        ),
+        McpConfig(
+            name = McpConfig.DISABLE, // 显示在下拉菜单的名字
+            baseUrl = McpConfig.DUMMY, // 你的原始 Base URL
+            apiKey = McpConfig.DUMMY // 你的原始 Key
         )
     )
     companion object{
@@ -430,7 +435,7 @@ class MainActivity : AppCompatActivity() {
                             chatViewModel.appendStreamingContent(function.toString())
                             chatViewModel.markStreamingComplete()
                             if(function != null){
-                                val tool_result = createMpcToolCallRequest(currentMcpConfig, function)
+                                val tool_result = createMpcToolCallRequest(currentMcpConfig, function, applicationContext)
                                 if(tool_result != null){
                                     toolRecall(sessionId, tool_result)
                                 }
@@ -495,14 +500,13 @@ class MainActivity : AppCompatActivity() {
         // Disable controls and start SSE
         disableControls()
         currentEventSource = ApiClient.eventSourceFactory.newEventSource(request, listener)
+        if(currentMcpConfig.name == McpConfig.DISABLE) return
         Log.d("sendMessageToApi", "currentMpcConfig: ${currentMcpConfig.name}")
-        lifecycleScope.launch {
+/*        lifecycleScope.launch {
             withContext(Dispatchers.IO){
                 createGetMpcInfoRequest(currentMcpConfig)
             }
-        }
-
-
+        }*/
     }
 
     private fun disableControls() {
@@ -613,10 +617,10 @@ class MainActivity : AppCompatActivity() {
         }
         currentEventSource = ApiClient.eventSourceFactory.newEventSource(request, listener)
         Log.d("sendMessageToApi", "currentMpcConfig: ${currentMcpConfig.name}")
-        lifecycleScope.launch {
+/*        lifecycleScope.launch {
             withContext(Dispatchers.IO){
                 createGetMpcInfoRequest(currentMcpConfig)
             }
-        }
+        }*/
     }
 }

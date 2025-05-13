@@ -1,6 +1,13 @@
 package com.kiranosora.space.mpc_chat.mcp
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat.startActivity
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.kiranosora.space.mpc_chat.McpConfig
@@ -9,11 +16,42 @@ import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import androidx.core.net.toUri
 
 class MpcRequestHelper {
     companion object {
-        val retorfit: Retrofit.Builder = Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
+        private var localFunctions = mutableListOf<FunctionTool>()
+        val localFunctionMap = mutableMapOf<String, (Map<String, String>, Context) -> String?>()
         val gson = Gson()
+        val mapType = object:TypeToken<Map<String, String>>(){}.type;
+
+        fun openAndroidPermission(arguments:Map<String, String>, context: Context):String?{
+            val permission = arguments.get("permission")
+            val packageName = arguments.get("packageName")
+            val uri = "package:${packageName}".toUri()
+            context.startActivity(
+                Intent(
+                    Settings.ACTION_MANAGE_WRITE_SETTINGS,
+                    uri
+                ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+            )
+            return "$permission permission for $packageName opened"
+        }
+        fun getLocalFunctions():List<FunctionTool> {
+            if(localFunctions.isNotEmpty()) return localFunctions
+            var properties = mutableMapOf<String, ParameterProperty>()
+            properties.put("permission", ParameterProperty("string", "permission to open"))
+            properties.put("packageName", ParameterProperty("string", "permission of which app package"))
+
+            var required = mutableListOf<String>()
+            localFunctions.add(FunctionTool("function", FunctionDetails("openAndroidPermission", "tool to open android permission setting",
+                FunctionParameters("object", properties, listOf<String>()))))
+            localFunctionMap.put("openAndroidPermission", ::openAndroidPermission)
+            return localFunctions
+        }
+
+
+        val retorfit: Retrofit.Builder = Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
         var functionTools : List<FunctionTool>? = null
         fun createGetMpcInfoRequest(currentMcpConfig: McpConfig): List<FunctionTool>? {
             val mpcCallService =retorfit.baseUrl(currentMcpConfig.baseUrl).build().create(MpcCallService::class.java)
@@ -24,7 +62,16 @@ class MpcRequestHelper {
             return functionTools
         }
 
-        fun createMpcToolCallRequest(currentMcpConfig: McpConfig, functionCallArguments: FunctionCallArguments): String? {
+
+        fun callLocalFunction(functionCallArguments: FunctionCallArguments, context: Context):String?{
+            gson.fromJson(functionCallArguments.arguments, Map::class.java)
+            return localFunctionMap[functionCallArguments.name]?.invoke(gson.fromJson(functionCallArguments.arguments, mapType), context)
+        }
+
+        fun createMpcToolCallRequest(currentMcpConfig: McpConfig, functionCallArguments: FunctionCallArguments, context: Context): String? {
+            if(currentMcpConfig.baseUrl == McpConfig.DUMMY){
+                return callLocalFunction(functionCallArguments, context)
+            }
             val mpcCallService =retorfit.baseUrl(currentMcpConfig.baseUrl).build().create(MpcCallService::class.java)
             Log.d("tool_call", "arguments: ${functionCallArguments.arguments}")
             var type = object : TypeToken<Map<String, Object>>() {}.type
@@ -50,7 +97,8 @@ class MpcRequestHelper {
             val toolCallResponse:String
             if(arg_types.isEmpty()){
                 Log.d("tool_call", "start to call arguments: void with url = ${currentMcpConfig.baseUrl}/${functionCallArguments.name}")
-                toolCallResponse = mpcCallService.callToolVoid("${currentMcpConfig.baseUrl}${functionCallArguments.name}",
+                toolCallResponse = mpcCallService.callToolVoid(
+                    "${currentMcpConfig.baseUrl}${functionCallArguments.name}",
                 ).execute().body().toString()            }
             else if(arg_types[0] == "string"){
                 type = object : TypeToken<Map<String, String>>() {}.type
@@ -76,6 +124,10 @@ class MpcRequestHelper {
         }
 
         fun createMpcSystemPrompt(currentMcpConfig: McpConfig) : List<FunctionTool>?{
+            if(currentMcpConfig.baseUrl == McpConfig.DUMMY){
+                return getLocalFunctions()
+            }
+            if(currentMcpConfig.name == McpConfig.DISABLE) return null
             val functionTools = createGetMpcInfoRequest(currentMcpConfig)
             return functionTools
         }

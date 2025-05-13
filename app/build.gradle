@@ -7,10 +7,15 @@ plugins {
 android {
     namespace 'com.kiranosora.space.mpc_chat'
     compileSdk 35
-
+    packagingOptions {
+        exclude 'META-INF/LICENSE-LGPL-2.1.txt'
+        exclude 'META-INF/LICENSE-LGPL-3.txt'
+        exclude 'META-INF/LICENSE-W3C-TEST'
+        exclude 'META-INF/DEPENDENCIES'
+    }
     defaultConfig {
         applicationId "com.kiranosora.space.mpc_chat"
-        minSdk 24
+        minSdk 30
         targetSdk 35
         versionCode 1
         versionName "1.0"
@@ -77,4 +82,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2" // <--- 确保有这一行 (使用最新稳定版本)
     // 你可能已经有了 lifecycle-viewmodel-ktx
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2"
+
+    implementation 'com.vladsch.flexmark:flexmark-all:0.64.8'
+
 }

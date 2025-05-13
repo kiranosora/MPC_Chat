@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.kiranosora.space.mpc_chat.api_chat.ChatMessage
+import com.kiranosora.space.mpc_chat.util.TextUtils
 
 class MessageAdapter(private val messages: MutableList<ChatMessage>) :
     RecyclerView.Adapter<MessageAdapter.MessageViewHolder>() {
@@ -33,7 +34,7 @@ class MessageAdapter(private val messages: MutableList<ChatMessage>) :
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
         val message = messages[position]
         holder.roleTextView.text = message.role.replaceFirstChar { it.uppercase() }
-        holder.contentTextView.text = message.content
+        holder.contentTextView.text = TextUtils.markDown2Text(message.content)
 // 根据角色设置背景和对齐
         if (message.role == "user") {
             // 用户消息 (浅绿色，靠右)
@@ -95,10 +96,10 @@ class MessageAdapter(private val messages: MutableList<ChatMessage>) :
             val message = messages[position]
             payloads.forEach { payload ->
                 when (payload) {
-                    PAYLOAD_CONTENT_UPDATE -> holder.contentTextView.text = message.content
+                    PAYLOAD_CONTENT_UPDATE -> holder.contentTextView.text = TextUtils.markDown2Text(message.content)
                     PAYLOAD_STREAMING_DONE -> {
                         // 在这里处理流结束时的 UI 变化，比如隐藏 typing 指示器
-                        holder.contentTextView.text = message.content // 确保内容是最终的
+                        holder.contentTextView.text = TextUtils.markDown2Text(message.content) // 确保内容是最终的
                     }
                 }
             }
