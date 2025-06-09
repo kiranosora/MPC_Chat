@@ -7,11 +7,11 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    private const val TIME_OUT = 60L
+    private const val TIME_OUT = 600L
     // OkHttpClient 实例 (需要先定义)
     val okHttpClient: OkHttpClient by lazy {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.NONE
+            level = HttpLoggingInterceptor.Level.HEADERS
         }
         OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)

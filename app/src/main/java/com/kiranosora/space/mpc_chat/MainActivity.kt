@@ -86,21 +86,21 @@ class MainActivity : AppCompatActivity() {
     private val apiConfigs = listOf(
         ApiConfig(
             name = "qwen3moe", // 显示在下拉菜单的名字
-            baseUrl = "https://kiranosora.space:12345/v1/", // 你的原始 Base URL
+            baseUrl = "https://kiranosora.xyz:12345/v1/", // 你的原始 Base URL
             modelName = "qwen3:30b-a3b-fp16", // 替换成你的模型名!
             apiKey = "ollama", // 你的原始 Key
             isOllama = false
         ),
         ApiConfig(
             name = "qwen3moe-full", // 显示在下拉菜单的名字
-            baseUrl = "https://kiranosora.space:12345/v1/", // 你的原始 Base URL
+            baseUrl = "https://kiranosora.xyz:12345/v1/", // 你的原始 Base URL
             modelName = "Qwen3-235B-A22B-IQ2_S-ollama:latest", // 替换成你的模型名!
             apiKey = "ollama", // 你的原始 Key
             isOllama = false
         ),
         ApiConfig(
             name = "qwen3:32b-q8_0", // 显示在下拉菜单的名字
-            baseUrl = "https://kiranosora.space:12345/v1/", // 你的原始 Base URL
+            baseUrl = "https://kiranosora.xyz:12345/v1/", // 你的原始 Base URL
             modelName = "qwen3:32b-q8_0", // 替换成你的模型名!
             apiKey = "ollama", // 你的原始 Key,
             isOllama = false
