@@ -389,11 +389,15 @@ class MainActivity : AppCompatActivity() {
         // 添加助手的初始空消息 (或带 "typing..." 标记)
         chatViewModel.addMessage("assistant", "", sessionId)
 
-
+        val messagesDeepCopy = chatViewModel.currentMessages.value.map { it.copy() }.toList()
+        val lastMsg = messagesDeepCopy.get(messagesDeepCopy.size - 1)
+        if(currentMcpConfig.name == McpConfig.REMOTE_MCP){
+            lastMsg.content = lastMsg.content + " OPPO的官网地址是 https://www.oppo.com/cn/oneplus/smartphones/ coloros的官网：https://www.coloros.com/version/coloros15/"
+        }
         // --- Prepare Request ---
         val requestPayload = ChatCompletionRequest(
             currentApiConfig.modelName,
-            chatViewModel.currentMessages.value, // Map to API model if needed
+            messagesDeepCopy, // Map to API model if needed
             true,
             mpcPrompt,
             false

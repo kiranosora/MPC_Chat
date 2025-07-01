@@ -83,6 +83,10 @@ public class ChatMessage {
         return new ChatMessage(this.sessionId, this.role, this.content, isStreaming, this.timestamp);
     }
 
+    public ChatMessage copy() {
+        return new ChatMessage(this.sessionId, this.role, this.content, isStreaming, this.timestamp);
+    }
+
     public DbChatMessage toDbChatMessage() {
         return new DbChatMessage(this.id, this.sessionId, this.role, this.content, this.timestamp);
     }
