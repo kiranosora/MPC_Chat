@@ -395,7 +395,8 @@ class MainActivity : AppCompatActivity() {
             currentApiConfig.modelName,
             chatViewModel.currentMessages.value, // Map to API model if needed
             true,
-            mpcPrompt
+            mpcPrompt,
+            false
             )
         // ... (rest of request building using currentApiConfig - same as before)
         val requestBodyJson = gson.toJson(requestPayload)
